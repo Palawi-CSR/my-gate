@@ -6,7 +6,7 @@ interface Props {
   onChange: (photo: Blob | null) => void;
 }
 
-const MAX_SIDE = 1280; // px; keeps uploads well under the API's 5 MB limit
+const MAX_SIDE = 1280; // px; keeps uploads far below the 4 MB API / 4.5 MB Vercel limit
 
 /**
  * Re-encode an image as a JPEG no larger than MAX_SIDE on its longest side.
@@ -66,10 +66,12 @@ export default function PhotoPicker({ value, onChange }: Props) {
   function capture() {
     const video = videoRef.current;
     if (!video) return;
+    // Same size cap as uploads, so a high-resolution webcam can't exceed the upload limit.
+    const scale = Math.min(1, MAX_SIDE / Math.max(video.videoWidth, video.videoHeight));
     const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d')!.drawImage(video, 0, 0);
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
+    canvas.getContext('2d')!.drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas.toBlob(
       (blob) => {
         if (blob) onChange(blob);

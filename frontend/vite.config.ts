@@ -17,10 +17,9 @@ export default defineConfig(({ mode }) => {
       port: Number(env.WEB_PORT) || 5180,
       strictPort: true, // fail loudly instead of drifting onto another app's port
       host: true, // also reachable from phones on the same Wi-Fi (http://<this-PC-IP>:5180)
-      // In development /api and /files are forwarded to the FastAPI server.
+      // In development /api is forwarded to the FastAPI server (on Vercel it is the same domain).
       proxy: {
         '/api': { target: apiTarget, changeOrigin: true },
-        '/files': { target: apiTarget, changeOrigin: true },
       },
     },
   };

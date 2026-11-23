@@ -29,4 +29,5 @@ Thumbs.db
 .idea/
 *.log
 backend/scripts/gate_register_backup.json
+# Old local photo folder (photos now live in MongoDB)
 backend/storage/

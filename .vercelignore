@@ -1,0 +1,7 @@
+# Keep local-only files out of `vercel` CLI uploads (Git deploys never contain them).
+.env
+backend/.venv/
+backend/storage/
+backend/__pycache__/
+frontend/node_modules/
+frontend/dist/
