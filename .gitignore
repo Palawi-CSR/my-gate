@@ -1,0 +1,32 @@
+# Environment files hold secrets (MongoDB URI) - never commit them.
+# These patterns match in every folder: root, backend/ and frontend/.
+.env
+.env.*
+*.env
+# ...but keep the blank template.
+!.env.example
+
+# Frontend
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Backend
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+backend/scripts/gate_register_backup.json
+backend/storage/
