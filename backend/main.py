@@ -71,7 +71,11 @@ def get_db() -> Database:
     if _db is None:
         with _db_lock:
             if _db is None:
-                client = MongoClient(settings.mongodb_uri, serverSelectionTimeoutMS=8000, tz_aware=True, appname="my-gate")
+                # Small pool: each serverless instance gets its own client, and the free Atlas tier
+                # allows ~500 connections in total.
+                client = MongoClient(
+                    settings.mongodb_uri, serverSelectionTimeoutMS=8000, maxPoolSize=10, tz_aware=True, appname="my-gate"
+                )
                 db = client[settings.mongodb_db_name]
                 db.visits.create_index([("out_time", -1)])  # also verifies the connection
                 _db = db
