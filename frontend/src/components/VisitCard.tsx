@@ -1,18 +1,17 @@
 import { Briefcase, Clock, ImageOff, Loader2, LogIn, LogOut, Timer, User } from 'lucide-react';
 import { useState } from 'react';
 import { checkIn, photoUrl, type Visit } from '../api';
+import { useLang } from '../i18n';
 import PhotoPicker from './PhotoPicker';
 
-const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-const fmtDate = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
-
+/** Whole hours and leftover minutes between two timestamps. */
 function duration(from: string, to: string) {
   const mins = Math.max(0, Math.round((new Date(to).getTime() - new Date(from).getTime()) / 60000));
-  const h = Math.floor(mins / 60);
-  return h ? `${h}h ${mins % 60}m` : `${mins}m`;
+  return [Math.floor(mins / 60), mins % 60] as const;
 }
 
 function Stamp({ kind, time, photo }: { kind: 'out' | 'in'; time: string | null; photo: string | null }) {
+  const { t, fmtTime, fmtDate } = useLang();
   const Icon = kind === 'out' ? LogOut : LogIn;
   const color = kind === 'out' ? 'text-navy' : 'text-teal';
   return (
@@ -22,19 +21,19 @@ function Stamp({ kind, time, photo }: { kind: 'out' | 'in'; time: string | null;
           <a href={photoUrl(photo)} target="_blank" rel="noreferrer" className="group block h-full">
             <img
               src={photoUrl(photo)}
-              alt={`${kind === 'out' ? 'Out' : 'In'} photo`}
+              alt={kind === 'out' ? t.outPhoto : t.inPhoto}
               className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
             />
           </a>
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-1 text-slate-300">
             <ImageOff className="h-6 w-6" />
-            <span className="text-xs">No photo</span>
+            <span className="text-xs">{t.noPhoto}</span>
           </div>
         )}
       </div>
       <p className={`flex items-center gap-1 text-xs font-semibold tracking-wide uppercase ${color}`}>
-        <Icon className="h-3.5 w-3.5" /> {kind === 'out' ? 'Out' : 'In'}
+        <Icon className="h-3.5 w-3.5" /> {kind === 'out' ? t.out : t.in}
       </p>
       {time ? (
         <>
@@ -42,18 +41,20 @@ function Stamp({ kind, time, photo }: { kind: 'out' | 'in'; time: string | null;
           <p className="text-xs text-slate-500">{fmtDate(time)}</p>
         </>
       ) : (
-        <p className="text-sm text-slate-400">Not back yet</p>
+        <p className="text-sm text-slate-400">{t.notBack}</p>
       )}
     </div>
   );
 }
 
 export default function VisitCard({ visit, onUpdated }: { visit: Visit; onUpdated: (v: Visit) => void }) {
+  const { t, num, fmtError } = useLang();
   const [open, setOpen] = useState(false);
   const [photo, setPhoto] = useState<Blob | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const isOut = !visit.in_time;
+  const [hours, mins] = visit.in_time ? duration(visit.out_time, visit.in_time) : [0, 0];
   const PurposeIcon = visit.purpose === 'Office Work' ? Briefcase : User;
 
   async function confirm() {
@@ -63,7 +64,7 @@ export default function VisitCard({ visit, onUpdated }: { visit: Visit; onUpdate
       onUpdated(await checkIn(visit.id, photo));
       setOpen(false);
     } catch (err) {
-      setError((err as Error).message);
+      setError(fmtError((err as Error).message));
     } finally {
       setSaving(false);
     }
@@ -85,16 +86,16 @@ export default function VisitCard({ visit, onUpdated }: { visit: Visit; onUpdate
               }`}
             >
               <PurposeIcon className="h-3 w-3" />
-              {visit.purpose}
+              {t.purpose[visit.purpose] ?? visit.purpose}
             </span>
           </div>
           {isOut ? (
             <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" /> Out
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" /> {t.out}
             </span>
           ) : (
             <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-teal/10 px-2.5 py-1 text-xs font-semibold text-teal">
-              <Timer className="h-3.5 w-3.5" /> {duration(visit.out_time, visit.in_time!)}
+              <Timer className="h-3.5 w-3.5" /> {t.duration(hours ? num(hours) : null, num(mins))}
             </span>
           )}
         </div>
@@ -109,14 +110,14 @@ export default function VisitCard({ visit, onUpdated }: { visit: Visit; onUpdate
             onClick={() => setOpen(true)}
             className="bg-brand mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 font-semibold text-white shadow-md shadow-teal/25 transition hover:brightness-110"
           >
-            <LogIn className="h-4 w-4" /> Check in
+            <LogIn className="h-4 w-4" /> {t.checkIn}
           </button>
         )}
 
         {isOut && open && (
           <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
             <p className="flex items-center gap-1.5 text-sm text-slate-600">
-              <Clock className="h-4 w-4 text-teal" /> Photo on return <span className="text-slate-400">(optional)</span>
+              <Clock className="h-4 w-4 text-teal" /> {t.returnPhoto} <span className="text-slate-400">{t.optional}</span>
             </p>
             <PhotoPicker value={photo} onChange={setPhoto} />
             {error && <p className="text-sm text-red-600">{error}</p>}
@@ -127,7 +128,7 @@ export default function VisitCard({ visit, onUpdated }: { visit: Visit; onUpdate
                 className="bg-brand flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 font-semibold text-white transition hover:brightness-110 disabled:opacity-60"
               >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-                {saving ? 'Saving…' : 'Confirm check in'}
+                {saving ? t.saving : t.confirmCheckIn}
               </button>
               <button
                 onClick={() => {
@@ -137,7 +138,7 @@ export default function VisitCard({ visit, onUpdated }: { visit: Visit; onUpdate
                 }}
                 className="rounded-xl border border-slate-300 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
               >
-                Cancel
+                {t.cancel}
               </button>
             </div>
           </div>

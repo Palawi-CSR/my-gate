@@ -3,9 +3,11 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { listVisits, type Visit } from './api';
 import CheckOutForm from './components/CheckOutForm';
 import Filters from './components/Filters';
+import { useLang, type Lang } from './i18n';
 import VisitCard from './components/VisitCard';
 
 export default function App() {
+  const { t, fmtError } = useLang();
   const [visits, setVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -63,15 +65,15 @@ export default function App() {
           />
 
           {error && (
-            <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">Could not load entries: {error}</p>
+            <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{t.loadError}: {fmtError(error)}</p>
           )}
 
           <Section
             icon={DoorOpen}
-            title="Currently out"
+            title={t.currentlyOut}
             count={out.length}
             accent="bg-amber-500"
-            empty={filtered ? 'No matching entries.' : 'Nobody is out right now.'}
+            empty={filtered ? t.noMatches : t.nobodyOut}
           >
             {out.map((v) => (
               <VisitCard key={v.id} visit={v} onUpdated={refresh} />
@@ -80,10 +82,10 @@ export default function App() {
 
           <Section
             icon={CheckCircle2}
-            title="Returned"
+            title={t.returned}
             count={back.length}
             accent="bg-teal"
-            empty={filtered ? 'No matching entries.' : 'No completed entries yet.'}
+            empty={filtered ? t.noMatches : t.noCompleted}
           >
             {back.map((v) => (
               <VisitCard key={v.id} visit={v} onUpdated={refresh} />
@@ -96,6 +98,7 @@ export default function App() {
 }
 
 function Header() {
+  const { t, fmtTime, fmtDate } = useLang();
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 30_000);
@@ -110,25 +113,53 @@ function Header() {
 
       <div className="relative mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-6 sm:px-6">
         <div className="flex items-center gap-4">
-          <img src="/palawi-logo.png" alt="Palawi" className="h-16 w-16 rounded-full bg-white shadow-lg ring-4 ring-white/30" />
+          <img src="/palawi-logo.png" alt={t.brand} className="h-16 w-16 rounded-full bg-white shadow-lg ring-4 ring-white/30" />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">My Gate</h1>
-            <p className="text-sm text-white/75">Palawi · Gate in &amp; out register</p>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.appName}</h1>
+            <p className="text-sm text-white/75">{t.subtitle}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <LanguageToggle />
           <span className="flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 backdrop-blur">
             <CalendarDays className="h-4 w-4" />
-            {now.toLocaleDateString(undefined, { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}
+            {fmtDate(now, true)}
           </span>
           <span className="flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 font-semibold tabular-nums backdrop-blur">
             <Clock className="h-4 w-4" />
-            {now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+            {fmtTime(now)}
           </span>
         </div>
       </div>
     </header>
+  );
+}
+
+const LANGS: { value: Lang; label: string }[] = [
+  { value: 'en', label: 'English' },
+  { value: 'mr', label: 'मराठी' },
+];
+
+function LanguageToggle() {
+  const { lang, setLang } = useLang();
+  return (
+    <div role="group" aria-label="Language / भाषा" className="flex rounded-full bg-white/15 p-1 backdrop-blur">
+      {LANGS.map(({ value, label }) => (
+        <button
+          key={value}
+          type="button"
+          lang={value}
+          aria-pressed={lang === value}
+          onClick={() => setLang(value)}
+          className={`rounded-full px-3 py-1 font-semibold transition ${
+            lang === value ? 'bg-white text-navy shadow' : 'text-white/80 hover:text-white'
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -147,6 +178,7 @@ function Section({
   empty: string;
   children: ReactNode;
 }) {
+  const { num } = useLang();
   return (
     <section>
       <div className="mb-4 flex items-center gap-3">
@@ -155,7 +187,7 @@ function Section({
           <Icon className="h-5 w-5 text-slate-500" />
           {title}
         </h2>
-        <span className="rounded-full bg-slate-200/70 px-2.5 py-0.5 text-xs font-semibold text-slate-600">{count}</span>
+        <span className="rounded-full bg-slate-200/70 px-2.5 py-0.5 text-xs font-semibold text-slate-600">{num(count)}</span>
       </div>
       {count ? (
         <div className="grid gap-5 sm:grid-cols-2 2xl:grid-cols-3">{children}</div>

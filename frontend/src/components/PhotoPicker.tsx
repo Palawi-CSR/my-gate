@@ -1,5 +1,6 @@
 import { Camera, ImagePlus, Loader2, Trash2, Upload, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useLang } from '../i18n';
 
 interface Props {
   value: Blob | null;
@@ -31,6 +32,7 @@ const canUseLiveCamera = () => window.isSecureContext && !!navigator.mediaDevice
 
 /** Take a photo with the device camera, or upload an image file. */
 export default function PhotoPicker({ value, onChange }: Props) {
+  const { t } = useLang();
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraFileRef = useRef<HTMLInputElement>(null);
@@ -89,7 +91,7 @@ export default function PhotoPicker({ value, onChange }: Props) {
     try {
       onChange(await shrinkImage(file));
     } catch {
-      setError('Could not read that image. Please use a JPEG or PNG photo.');
+      setError(t.badImage);
     } finally {
       setBusy(false);
     }
@@ -107,12 +109,12 @@ export default function PhotoPicker({ value, onChange }: Props) {
           <Loader2 className="h-8 w-8 animate-spin text-teal" />
         ) : preview ? (
           <>
-            <img src={preview} alt="Selected" className="h-full w-full object-cover" />
+            <img src={preview} alt={t.selected} className="h-full w-full object-cover" />
             <button
               type="button"
               onClick={() => onChange(null)}
-              title="Remove photo"
-              aria-label="Remove photo"
+              title={t.removePhoto}
+              aria-label={t.removePhoto}
               className="absolute top-2 right-2 rounded-full bg-black/55 p-2 text-white backdrop-blur transition hover:bg-red-600"
             >
               <Trash2 className="h-4 w-4" />
@@ -123,7 +125,7 @@ export default function PhotoPicker({ value, onChange }: Props) {
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200">
               <ImagePlus className="h-6 w-6" />
             </span>
-            <span className="text-sm">Tap to take a photo</span>
+            <span className="text-sm">{t.tapToPhoto}</span>
           </button>
         )}
       </div>
@@ -136,19 +138,19 @@ export default function PhotoPicker({ value, onChange }: Props) {
               onClick={capture}
               className="bg-brand flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white transition hover:brightness-110 sm:py-2"
             >
-              <Camera className="h-4 w-4" /> Capture
+              <Camera className="h-4 w-4" /> {t.capture}
             </button>
             <button type="button" onClick={() => setStream(null)} className={btn}>
-              <X className="h-4 w-4" /> Cancel
+              <X className="h-4 w-4" /> {t.cancel}
             </button>
           </>
         ) : (
           <>
             <button type="button" onClick={openCamera} className={btn}>
-              <Camera className="h-4 w-4" /> {value ? 'Retake' : 'Camera'}
+              <Camera className="h-4 w-4" /> {value ? t.retake : t.camera}
             </button>
             <button type="button" onClick={() => fileRef.current?.click()} className={btn}>
-              <Upload className="h-4 w-4" /> Upload
+              <Upload className="h-4 w-4" /> {t.upload}
             </button>
           </>
         )}

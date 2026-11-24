@@ -1,6 +1,7 @@
 import { AlertCircle, Briefcase, Loader2, LogOut, User, UserRound, type LucideIcon } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { checkOut, type Purpose, type Visit } from '../api';
+import { useLang } from '../i18n';
 import PhotoPicker from './PhotoPicker';
 
 const PURPOSES: { value: Purpose; icon: LucideIcon }[] = [
@@ -9,6 +10,7 @@ const PURPOSES: { value: Purpose; icon: LucideIcon }[] = [
 ];
 
 export default function CheckOutForm({ onDone }: { onDone: (visit: Visit) => void }) {
+  const { t, fmtError } = useLang();
   const [name, setName] = useState('');
   const [purpose, setPurpose] = useState<Purpose | null>(null);
   const [photo, setPhoto] = useState<Blob | null>(null);
@@ -17,9 +19,9 @@ export default function CheckOutForm({ onDone }: { onDone: (visit: Visit) => voi
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return setError('Please enter a name.');
-    if (!photo) return setError('Please add a photo.');
-    if (!purpose) return setError('Please choose Personal Work or Office Work.');
+    if (!name.trim()) return setError(t.errName);
+    if (!photo) return setError(t.errPhoto);
+    if (!purpose) return setError(t.errPurpose);
     setSaving(true);
     setError('');
     try {
@@ -28,7 +30,7 @@ export default function CheckOutForm({ onDone }: { onDone: (visit: Visit) => voi
       setPurpose(null);
       setPhoto(null);
     } catch (err) {
-      setError((err as Error).message);
+      setError(fmtError((err as Error).message));
     } finally {
       setSaving(false);
     }
@@ -41,33 +43,33 @@ export default function CheckOutForm({ onDone }: { onDone: (visit: Visit) => voi
           <LogOut className="h-5 w-5" />
         </span>
         <div>
-          <h2 className="text-lg font-semibold leading-tight">Check out</h2>
-          <p className="text-xs text-white/75">Record a person leaving the gate</p>
+          <h2 className="text-lg font-semibold leading-tight">{t.checkOut}</h2>
+          <p className="text-xs text-white/75">{t.checkOutHint}</p>
         </div>
       </div>
 
       <div className="space-y-5 p-6">
         <label className="block">
-          <span className="mb-1.5 block text-sm font-medium text-slate-700">Name</span>
+          <span className="mb-1.5 block text-sm font-medium text-slate-700">{t.name}</span>
           <div className="relative">
             <UserRound className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={100}
-              placeholder="Full name"
+              placeholder={t.fullName}
               className="w-full rounded-xl border border-slate-300 py-2.5 pr-3 pl-9 outline-none transition focus:border-teal focus:ring-4 focus:ring-teal/15"
             />
           </div>
         </label>
 
         <div>
-          <span className="mb-1.5 block text-sm font-medium text-slate-700">Photo</span>
+          <span className="mb-1.5 block text-sm font-medium text-slate-700">{t.photo}</span>
           <PhotoPicker value={photo} onChange={setPhoto} />
         </div>
 
         <div>
-          <span className="mb-1.5 block text-sm font-medium text-slate-700">Purpose</span>
+          <span className="mb-1.5 block text-sm font-medium text-slate-700">{t.purposeLabel}</span>
           <div className="grid grid-cols-2 gap-3">
             {PURPOSES.map(({ value, icon: Icon }) => {
               const active = purpose === value;
@@ -84,7 +86,7 @@ export default function CheckOutForm({ onDone }: { onDone: (visit: Visit) => voi
                   <span className={`flex h-9 w-9 items-center justify-center rounded-full ${active ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500'}`}>
                     <Icon className="h-4 w-4" />
                   </span>
-                  {value}
+                  {t.purpose[value]}
                 </label>
               );
             })}
@@ -104,7 +106,7 @@ export default function CheckOutForm({ onDone }: { onDone: (visit: Visit) => voi
           className="bg-brand flex w-full items-center justify-center gap-2 rounded-xl py-3 font-semibold text-white shadow-lg shadow-teal/25 transition hover:brightness-110 active:scale-[0.99] disabled:opacity-60"
         >
           {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <LogOut className="h-5 w-5" />}
-          {saving ? 'Saving…' : 'Check out'}
+          {saving ? t.saving : t.checkOut}
         </button>
       </div>
     </form>
