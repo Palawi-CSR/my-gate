@@ -4,7 +4,7 @@ import type { Purpose } from './api';
 export type Lang = 'en' | 'mr';
 
 const en = {
-  appName: 'My Gate',
+  appName: 'Gate Register',
   brand: 'Palawi',
   subtitle: 'Palawi · Gate in & out register',
   /** Messages the server (or network) can return, shown as-is in English. */
@@ -65,7 +65,7 @@ const en = {
 type Dict = typeof en;
 
 const mr: Dict = {
-  appName: 'माय गेट',
+  appName: 'गेट रजिस्टर',
   brand: 'पलावी',
   subtitle: 'पलावी · गेट ये-जा नोंदवही',
   serverErrors: {
